@@ -12,6 +12,7 @@ delay = 2  # Waiting delay to avoid "Too Many Requests" error with the website
 # Path were you want to export data
 PATH = private_constants.path
 
+
 def get_team_acronym(team, year):
     critical_acronyms = ['NOP', 'NOH', 'NOK', 'NJN', 'BRK', 'CHO', 'CHA', 'CHH', 'SEA', 'OKC']
     if team not in critical_acronyms:
