@@ -8,3 +8,13 @@ Things to change :
     - wanted_stats  :   All the stats you want to scrap
     - years         :   What years you want to scrap
     - teams.txt     :   What teams you want to scrap
+
+# Using Pipenv
+
+## Install required packages
+
+``pipenv install``
+
+## Running the application
+
+``pipenv run python main.py``
