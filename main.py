@@ -3,6 +3,7 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 from openpyxl import Workbook
 from datetime import datetime
+import os
 
 import private_constants
 
@@ -10,7 +11,6 @@ delay = 2  # Waiting delay to avoid "Too Many Requests" error with the website
 
 # Path were you want to export data
 PATH = private_constants.path
-
 
 def get_team_acronym(team, year):
     critical_acronyms = ['NOP', 'NOH', 'NOK', 'NJN', 'BRK', 'CHO', 'CHA', 'CHH', 'SEA', 'OKC']
@@ -78,7 +78,8 @@ def main():
     years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2010, 2009, 2008, 2007, 2006, 2005]
     wanted_stats = ['ORtg', '3PAr']
 
-    with open("teams.txt", "r") as t:
+    teams_file_path = os.path.join(os.path.dirname(__file__), "teams.txt")
+    with open(teams_file_path, "r") as t:
         teams = t.read().splitlines()
 
     # --------------------------------- URL CREATION ---------------------------------
@@ -121,7 +122,11 @@ def main():
                                     float(data[sample][column][line]))
 
     excel_file.remove(excel_file["Sheet"])
-    excel_file.save(PATH + "DATA" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".xlsx")
+
+    file_path = os.path.join(os.path.dirname(__file__), PATH, "DATA" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".xlsx")
+    excel_file.save(file_path)
+
+    print("Saved file: " + file_path)
 
     # --------------------------------------------------------------------------------
 
