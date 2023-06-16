@@ -18,3 +18,15 @@ Things to change :
 ## Running the application
 
 ``pipenv run python main.py``
+
+# Using the App
+
+## Select data
+
+    - In the teams.txt file, you can write all the teams you want to analyze, one team per line.
+    
+    - In the urls.txt file, you can enter the pattern for each url you want to request.
+        > "TEAM_TO_CHANGE" is the location in the url where the team acronym will be written.
+        > "YEAR_TO_CHANGE" is the location in the url where the year will be written.
+
+    - In the stats.txt file, each line consists of all the statistics to be retrieved from the url of the corresponding line in urls.txt, each stat separated by ':'.

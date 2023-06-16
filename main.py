@@ -48,11 +48,11 @@ def get_team_acronym(team, year):
 
 
 def call_bbr(url, wanted_stats):
+    print(url)
+
     sleep(delay)
     html = urlopen(url)
     soup = BeautifulSoup(html, features="lxml")
-
-    print(url)
 
     titles = [th.getText() for th in soup.findAll('tr')[1].findAll('th')]
 
@@ -75,9 +75,28 @@ def call_bbr(url, wanted_stats):
     return result
 
 
+def get_url(raw_url, team, year):
+    return raw_url.replace("TEAM_TO_CHANGE", str(team)).replace("YEAR_TO_CHANGE", str(year))
+
+
 def main():
-    years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2010, 2009, 2008, 2007, 2006, 2005]
-    wanted_stats = ['ORtg', '3PAr']
+
+    years = []
+    years_file_path = os.path.join(os.path.dirname(__file__), "years.txt")
+    with open(years_file_path, 'r') as f:
+        years_str = f.read().splitlines()
+
+        for y in years_str:
+            years.append(int(y))
+
+    wanted_stats = []
+
+    wanted_stats_file_path = os.path.join(os.path.dirname(__file__), "stats.txt")
+    with open(wanted_stats_file_path, 'r') as f:
+        all_stats = f.read().splitlines()
+
+        for s in all_stats:
+            wanted_stats.append(s.split(':'))
 
     teams_file_path = os.path.join(os.path.dirname(__file__), "teams.txt")
     with open(teams_file_path, "r") as t:
@@ -85,46 +104,55 @@ def main():
 
     # --------------------------------- URL CREATION ---------------------------------
 
-    url_list = []
+    url_file_path = os.path.join(os.path.dirname(__file__), 'urls.txt')
+    with open(url_file_path, 'r') as t:
+        imported_raw_urls = t.read().splitlines()
 
-    for y in years:
-        for t in range(len(teams)):
-            url_list.append("https://www.basketball-reference.com/teams/" +
-                            str(get_team_acronym(teams[t], y)) + "/" + str(y) + "/gamelog-advanced/#tgl_advanced")
+    url_lists = []
+
+    for idx, u in enumerate(imported_raw_urls):
+        url_lists.append([])
+        for y in years:
+            for t in range(len(teams)):
+                url_lists[idx % len(imported_raw_urls)].append(get_url(u, get_team_acronym(teams[t], y), y))
 
     # --------------------------------------------------------------------------------
 
     data = []
 
-    for url in url_list:
-        data.append(call_bbr(url, wanted_stats))
+    for idx, url_list in enumerate(url_lists):
+        for url in url_list:
+            print(wanted_stats[idx])
+            data.append(call_bbr(url, wanted_stats[idx]))
 
     # --------------------------------- EXCEL EXPORT ---------------------------------
 
     excel_file = Workbook()
 
-    for year in range(len(years)):
-        excel_file.create_sheet(str(years[year]))
-        year_sheet = excel_file[str(years[year])]
+    for idx in range(len(wanted_stats)):
+        for year in range(len(years)):
+            excel_file.create_sheet(str(years[year]) + '_' + str(idx))
+            year_sheet = excel_file[str(years[year]) + '_' + str(idx)]
 
-        for t in range(len(teams)):
-            year_sheet.cell(1, len(wanted_stats) * t + 1, teams[t])
+            for t in range(len(teams)):
+                year_sheet.cell(1, len(wanted_stats[idx]) * t + 1, teams[t])
 
-        for sample in range(int(len(data) / len(years))):
-            sample += int(len(data) * (year / len(years)))
-            for h in range(len(wanted_stats)):
-                year_sheet.cell(2, (h + len(wanted_stats) * sample) % int(len(wanted_stats) * len(data) / len(years)) +
-                                1, wanted_stats[h])
+            for sample in range(int(len(data) / len(years))):
+                sample += int(len(data) * (year / len(years)))
+                for h in range(len(wanted_stats[idx])):
+                    year_sheet.cell(2, (h + len(wanted_stats[idx]) * sample) %
+                                    int(len(wanted_stats[idx]) * len(data) / len(years)) + 1, wanted_stats[idx][h])
 
-            for column in range(len(data[sample])):
-                for line in range(len(data[sample][column])):
-                    year_sheet.cell(line + 3, (column + len(wanted_stats) * sample) % int(len(wanted_stats) * len(data)
-                                                                                          / len(years)) + 1,
-                                    float(data[sample][column][line]))
+                for column in range(len(data[sample])):
+                    for line in range(len(data[sample][column])):
+                        year_sheet.cell(line + 3, (column + len(wanted_stats[idx]) * sample) %
+                                        int(len(wanted_stats[idx]) * len(data) / len(years)) + 1,
+                                        float(data[sample][column][line]))
 
     excel_file.remove(excel_file["Sheet"])
 
-    file_path = os.path.join(os.path.dirname(__file__), PATH, "DATA" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".xlsx")
+    file_path = os.path.join(os.path.dirname(__file__), PATH, "DATA" +
+                             datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".xlsx")
     excel_file.save(file_path)
 
     print("Saved file: " + file_path)
