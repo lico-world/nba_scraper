@@ -2,12 +2,7 @@
 A python base you can work on to scrap data from basketball-reference.
 
 Things to change :
-
-    - path          :   Were yo want to save the excel file
-    - delay         :   The delay before any request (to avoid the "Too Many Requests" error)
-    - wanted_stats  :   All the stats you want to scrap
-    - years         :   What years you want to scrap
-    - teams.txt     :   What teams you want to scrap
+- path          :   Where you want to save the excel file
 
 # Using Pipenv
 
@@ -23,10 +18,28 @@ Things to change :
 
 ## Select data
 
-    - In the teams.txt file, you can write all the teams you want to analyze, one team per line.
-    
-    - In the urls.txt file, you can enter the pattern for each url you want to request.
-        > "TEAM_TO_CHANGE" is the location in the url where the team acronym will be written.
-        > "YEAR_TO_CHANGE" is the location in the url where the year will be written.
+Update the ``config.toml`` file to customize :
 
-    - In the stats.txt file, each line consists of all the statistics to be retrieved from the url of the corresponding line in urls.txt, each stat separated by ':'.
+- ``years`` : the list of years to retrieve data for
+- ``teams`` : the list of teams you want to analyze
+- ``http_delay`` : the number of seconds to wait in between each request
+- ``requests.SOME_NAME`` : the request you want to execute (the ``SOME_NAME`` does not matter, as long as it's unique and not a duplicate)
+    - ``url`` : the pattern of the URL to request
+        - ``TEAM_TO_CHANGE`` is the location in the url where the team acronym will be written.
+        - ``YEAR_TO_CHANGE`` is the location in the url where the year will be written.
+    - ``stats`` : the list of stats you are interested in for this request
+
+## Example of a valid configuration file config.toml
+```toml
+years = [2023, 2022]
+teams = ["MIA", "BOS"]
+http_delay = 1.5
+
+[requests.basic]
+url = "https://www.basketball-reference.com/teams/TEAM_TO_CHANGE/YEAR_TO_CHANGE/gamelog/#tgl_basic"
+stats = [ "FG%", "TOV" ]
+
+[requests.advanced]
+url = "https://www.basketball-reference.com/teams/TEAM_TO_CHANGE/YEAR_TO_CHANGE/gamelog-advanced/#tgl_advanced"
+stats = [ "ORtg", "3PAr", "Pace" ]
+```
