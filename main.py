@@ -6,12 +6,10 @@ from datetime import datetime
 import os
 
 import private_constants
-
-delay = 2  # Waiting delay to avoid "Too Many Requests" error with the website
+import config
 
 # Path were you want to export data
 PATH = private_constants.path
-
 
 def get_team_acronym(team, year):
     critical_acronyms = ['NOP', 'NOH', 'NOK', 'NJN', 'BRK', 'CHO', 'CHA', 'CHH', 'SEA', 'OKC']
@@ -47,10 +45,10 @@ def get_team_acronym(team, year):
                 return 'OKC'
 
 
-def call_bbr(url, wanted_stats):
+def call_bbr(url, wanted_stats, http_delay: float = 1):
     print(url)
 
-    sleep(delay)
+    sleep(http_delay)
     html = urlopen(url)
     soup = BeautifulSoup(html, features="lxml")
 
@@ -80,36 +78,18 @@ def get_url(raw_url, team, year):
 
 
 def main():
+    configuration = config.load()
 
-    years = []
-    years_file_path = os.path.join(os.path.dirname(__file__), "years.txt")
-    with open(years_file_path, 'r') as f:
-        years_str = f.read().splitlines()
-
-        for y in years_str:
-            years.append(int(y))
+    years = configuration.years
+    teams = configuration.teams
 
     wanted_stats = []
-
-    wanted_stats_file_path = os.path.join(os.path.dirname(__file__), "stats.txt")
-    with open(wanted_stats_file_path, 'r') as f:
-        all_stats = f.read().splitlines()
-
-        for s in all_stats:
-            wanted_stats.append(s.split(':'))
-
-    teams_file_path = os.path.join(os.path.dirname(__file__), "teams.txt")
-    with open(teams_file_path, "r") as t:
-        teams = t.read().splitlines()
-
-    # --------------------------------- URL CREATION ---------------------------------
-
-    url_file_path = os.path.join(os.path.dirname(__file__), 'urls.txt')
-    with open(url_file_path, 'r') as t:
-        imported_raw_urls = t.read().splitlines()
+    imported_raw_urls = []
+    for request in configuration.requests.values():
+        wanted_stats.append(request.stats)
+        imported_raw_urls.append(request.url)
 
     url_lists = []
-
     for idx, u in enumerate(imported_raw_urls):
         url_lists.append([])
         for y in years:
@@ -123,7 +103,7 @@ def main():
     for idx, url_list in enumerate(url_lists):
         for url in url_list:
             print(wanted_stats[idx])
-            data.append(call_bbr(url, wanted_stats[idx]))
+            data.append(call_bbr(url, wanted_stats[idx], configuration.http_delay))
 
     # --------------------------------- EXCEL EXPORT ---------------------------------
 
